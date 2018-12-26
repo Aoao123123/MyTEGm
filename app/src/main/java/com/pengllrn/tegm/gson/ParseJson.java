@@ -10,6 +10,7 @@ import com.pengllrn.tegm.Aoao.DamageApplicationLists;
 import com.pengllrn.tegm.Aoao.DevicesInRoom;
 import com.pengllrn.tegm.Aoao.DevicesUsageLists;
 import com.pengllrn.tegm.Aoao.LoginStatus;
+import com.pengllrn.tegm.Aoao.SchoolProperty;
 import com.pengllrn.tegm.bean.AlarmList;
 import com.pengllrn.tegm.bean.All;
 import com.pengllrn.tegm.bean.ApplyCenterBean;
@@ -119,6 +120,12 @@ public class ParseJson {
         Gson gson = new Gson();
         AlarmLists alarmLists = gson.fromJson(json,AlarmLists.class);
         return alarmLists;
+    }
+
+    public SchoolProperty Json2SchoolProperty(String json) {
+        Gson gson = new Gson();
+        SchoolProperty schoolproperty = gson.fromJson(json,SchoolProperty.class);
+        return schoolproperty;
     }
 
     public List<School> SchoolPoint(String json) {

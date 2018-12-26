@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
                             Intent intent = new Intent(MainActivity.this, LookDevice.class);
                             startActivity(intent);
                             break;
-                        /*
+                        /**
                         * 功能已經廢除
                         */
 //                        case R.id.nav_search_device:

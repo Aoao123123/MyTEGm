@@ -16,6 +16,8 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.pengllrn.tegm.Aoao.AddingUrl;
+import com.pengllrn.tegm.Aoao.DeviceProperty;
 import com.pengllrn.tegm.R;
 import com.pengllrn.tegm.adapter.MyPopuAdapter;
 import com.pengllrn.tegm.bean.School;
@@ -26,6 +28,7 @@ import com.pengllrn.tegm.internet.OkHttp;
 import com.pengllrn.tegm.utils.FileCache;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import lecho.lib.hellocharts.model.Axis;
@@ -41,7 +44,7 @@ import okhttp3.RequestBody;
 
 public class StatisticsAct extends AppCompatActivity {
 
-    private String applyUrl = Constant.URL_STATISTICS;
+    private String applyUrl = Constant.URL_GET_SCHOOL_PROPERTY;
 
     private LinearLayout ll_school;
     private LinearLayout ll_statistics;
@@ -62,9 +65,10 @@ public class StatisticsAct extends AppCompatActivity {
         public void handleMessage(Message msg) {
             // TODO Auto-generated method stub
             switch (msg.what) {
-                case 0x2017:
+                case 0x2020:
                     String responseData = (msg.obj).toString();
-                    List<Statistics> statisticses = mParseJson.Json2Statistics(responseData);
+                    System.out.println(responseData);
+                    List<DeviceProperty> statisticses = mParseJson.Json2SchoolProperty(responseData).getProperty_info();
                     setChartView(statisticses);
                     tv_info.setText("统计信息如下：");
                     break;
@@ -232,12 +236,17 @@ public class StatisticsAct extends AppCompatActivity {
         if (!school.equals("") || type.equals("0")) {
             //访问网络
             OkHttp okHttp = new OkHttp(getApplicationContext(), mHandler);
-            RequestBody requestBody = new FormBody.Builder().add("school", schoolid).add("type", type).build();
-            okHttp.postDataFromInternet(applyUrl, requestBody);
+            String getschoolpropertyurl;
+            HashMap<String,String> hashMap;
+            hashMap = AddingUrl.createHashMap1("schoolid",schoolid);
+            getschoolpropertyurl = AddingUrl.getUrl(applyUrl,hashMap);
+            okHttp.getDataFromInternet(getschoolpropertyurl);
+//            RequestBody requestBody = new FormBody.Builder().add("school", schoolid).add("type", type).build();
+//            okHttp.postDataFromInternet(applyUrl, requestBody);
         }
     }
 
-    private void setChartView(List<Statistics> list) {
+    private void setChartView(List<DeviceProperty> list) {
         //每个集合显示几条柱子
         int numSubcolumns = 1;
         //显示多少个集合
@@ -256,7 +265,7 @@ public class StatisticsAct extends AppCompatActivity {
                 //创建一个柱子，然后设置值和颜色，并添加到list中
                 values.add(new SubcolumnValue(list.get(i).getValue(), ChartUtils.pickColor()));
                 //设置X轴的柱子所对应的属性名称
-                axisXValues.add(new AxisValue(i).setLabel(list.get(i).getType()));
+                axisXValues.add(new AxisValue(i).setLabel(list.get(i).getDevice_type()));
             }
             //将每个属性的拥有的柱子，添加到Column中
             Column column = new Column(values);

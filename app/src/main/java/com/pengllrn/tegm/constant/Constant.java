@@ -56,6 +56,10 @@ public class Constant {
      */
     public static final String URL_GET_ALARM_DEVICE = SERVER_URL + "get_alarm_list/";
     /**
+     * 獲取學校設備總資產
+     */
+    public static final String URL_GET_SCHOOL_PROPERTY = SERVER_URL + "get_school_property/";
+    /**
      * DamageApplyActivity,报废申请活动界面，用户填写好报废信息进行报废提交
      **/
     public static final String URL_DAMAGE_APPLY = SERVER_URL + "damageapply/";
