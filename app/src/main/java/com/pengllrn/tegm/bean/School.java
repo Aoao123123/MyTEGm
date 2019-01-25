@@ -5,7 +5,7 @@ package com.pengllrn.tegm.bean;
  */
 
 public class School {
-    private String schoolid;
+    private int schoolid;
     private String schoolname;
     private Double longitude; //经度
     private Double latitude;  //纬度
@@ -14,7 +14,7 @@ public class School {
     private String totaldevice;
     private String usingdevice;
 
-    public School(String id, String schoolname, Double longitude, Double latitude) {
+    public School(int id, String schoolname, Double longitude, Double latitude) {
         this.schoolid = id;
         this.schoolname = schoolname;
         this.longitude = longitude;
@@ -24,7 +24,7 @@ public class School {
         this.usingdevice = usingdevice;
     }
 
-    public String getId() {
+    public int getId() {
         return schoolid;
     }
 

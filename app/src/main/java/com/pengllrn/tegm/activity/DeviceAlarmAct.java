@@ -1,5 +1,6 @@
 package com.pengllrn.tegm.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -11,6 +12,7 @@ import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.pengllrn.tegm.Aoao.AddingUrl;
 import com.pengllrn.tegm.Aoao.AlarmDevice;
@@ -21,6 +23,7 @@ import com.pengllrn.tegm.bean.School;
 import com.pengllrn.tegm.constant.Constant;
 import com.pengllrn.tegm.gson.ParseJson;
 import com.pengllrn.tegm.internet.OkHttp;
+import com.pengllrn.tegm.utils.ActivityCollector;
 import com.pengllrn.tegm.utils.FileCache;
 import com.pengllrn.tegm.utils.SharedHelper;
 
@@ -49,10 +52,30 @@ public class DeviceAlarmAct extends AppCompatActivity {
             switch (msg.what){
                 case 0x2020:
                     String responseData = (msg.obj).toString();
+
                     System.out.println("Alarm reponse is " + responseData);
-                    alarmLists = mParseJson.Json2AlarmLists(responseData).getAlarm_list();
-                    tv_count.setText("总共计"+ alarmLists.size()+ "件设备");
-                    list_alarm.setAdapter(new AlarmAdaper(DeviceAlarmAct.this,alarmLists,R.layout.item_alarm));
+                    int statusValue = mParseJson.Json2AlarmLists(responseData).getStatus();
+                    if (statusValue == -5) {
+                        Toast.makeText(getApplicationContext(),"已与服务器断开连接，请重新登录",Toast.LENGTH_SHORT).show();
+                        ActivityCollector.finishAll();
+                        sharedHelper.clear();
+                        Intent intent = new Intent(DeviceAlarmAct.this, LoginActivity.class);
+                        startActivity(intent);
+                    } else if (statusValue == 0) {
+                        alarmLists = mParseJson.AlarmDevicePoint(responseData);
+                        System.out.print("alarmLists size " + alarmLists.size() + "\n");
+                        tv_count.setText("总共计"+ alarmLists.size()+ "件设备");
+                        list_alarm.setAdapter(new AlarmAdaper(DeviceAlarmAct.this,alarmLists,R.layout.item_alarm));
+                    }
+                    break;
+                case 0x22:
+                    Toast.makeText(getApplicationContext(), "服务器响应超时", Toast.LENGTH_SHORT).show();
+                    break;
+                case 0x30:
+                    Toast.makeText(getApplicationContext(), "网络连接失败", Toast.LENGTH_SHORT).show();
+                    break;
+                default:
+                    break;
             }
             super.handleMessage(msg);
         }
@@ -65,9 +88,10 @@ public class DeviceAlarmAct extends AppCompatActivity {
         initView();
         alarmTypeList.add("全部");
         alarmTypeList.add("设备使用状态异常");
-        alarmTypeList.add("使用时间异常");
+        alarmTypeList.add("设备使用时长异常");
         alarmTypeList.add("位置异常");
         setCbListener();
+        ActivityCollector.addActivity(this);
     }
 
     @Override
@@ -86,8 +110,8 @@ public class DeviceAlarmAct extends AppCompatActivity {
             HashMap<String,String> hashMap;
             if (listSchool != null) {
                 for (int i = 0;i < listSchool.size();i++) {
-                    String schoolid = listSchool.get(i).getId();
-                    hashMap = AddingUrl.createHashMap1("schoolid",schoolid);
+                    int schoolid = listSchool.get(i).getId();
+                    hashMap = AddingUrl.createHashMap1("schoolid",String.valueOf(schoolid));
                     OkHttp okHttp = new OkHttp(getApplicationContext(),mHander);
                     getalarmlisturl = AddingUrl.getUrl(applyUrl,hashMap);
                     okHttp.getDataFromInternet(getalarmlisturl);

@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.pengllrn.tegm.R;
 import com.pengllrn.tegm.fragment.My_ApplyFg;
 import com.pengllrn.tegm.fragment.Other_ApplyFg;
+import com.pengllrn.tegm.utils.ActivityCollector;
 import com.pengllrn.tegm.utils.FileCache;
 import com.pengllrn.tegm.utils.SharedHelper;
 
@@ -35,6 +36,7 @@ public class ApplyCenter extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_apply_center);
+        ActivityCollector.addActivity(this);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar1);
         setSupportActionBar(toolbar);

@@ -2,15 +2,23 @@ package com.pengllrn.tegm.gson;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.pengllrn.tegm.Aoao.AlarmDevice;
 import com.pengllrn.tegm.Aoao.AlarmLists;
 import com.pengllrn.tegm.Aoao.ApplicationCheckStatus;
 import com.pengllrn.tegm.Aoao.BuildingLists;
+import com.pengllrn.tegm.Aoao.BuildingListsStatus;
 import com.pengllrn.tegm.Aoao.DamageApplicationDetailLists;
+import com.pengllrn.tegm.Aoao.DamageApplicationDetailStatus;
 import com.pengllrn.tegm.Aoao.DamageApplicationLists;
+import com.pengllrn.tegm.Aoao.DamageApplicationStatus;
 import com.pengllrn.tegm.Aoao.DevicesInRoom;
+import com.pengllrn.tegm.Aoao.DevicesInRoomStatus;
 import com.pengllrn.tegm.Aoao.DevicesUsageLists;
+import com.pengllrn.tegm.Aoao.DevicesUsageStatus;
 import com.pengllrn.tegm.Aoao.LoginStatus;
+import com.pengllrn.tegm.Aoao.RoomListsStatus;
 import com.pengllrn.tegm.Aoao.SchoolProperty;
+import com.pengllrn.tegm.Aoao.SchoolStatus;
 import com.pengllrn.tegm.bean.AlarmList;
 import com.pengllrn.tegm.bean.All;
 import com.pengllrn.tegm.bean.ApplyCenterBean;
@@ -38,6 +46,7 @@ public class ParseJson {
     private List<DevicesUsageLists> listDevicesUsage = new ArrayList<DevicesUsageLists>();
     private List<DamageApplicationLists> listDamageApplication = new ArrayList<DamageApplicationLists>();
     private List<DamageApplicationDetailLists> listDamageApplicationDetail = new ArrayList<DamageApplicationDetailLists>();
+    private List<AlarmDevice> listAlarmDevices = new ArrayList<AlarmDevice>();
 
     public List<Device> JsonToDevice(String json) {
         Gson gson = new Gson();
@@ -96,6 +105,12 @@ public class ParseJson {
         return loginStatus;
     }
 
+    public SchoolStatus Json2SchoolStatus(String json) {
+        Gson gson = new Gson();
+        SchoolStatus schoolStatus = gson.fromJson(json,SchoolStatus.class);
+        return schoolStatus;
+    }
+
     public ApplicationCheckStatus Json2ApplicationCheckStatus(String json) {
         Gson gson = new Gson();
         ApplicationCheckStatus applicationCheckStatus = gson.fromJson(json,ApplicationCheckStatus.class);
@@ -116,10 +131,46 @@ public class ParseJson {
         return alarmLists;
     }
 
+    public DevicesUsageStatus Json2DeviceUsageStatus(String json) {
+        Gson gson = new Gson();
+        DevicesUsageStatus devicesUsageStatus = gson.fromJson(json,DevicesUsageStatus.class);
+        return devicesUsageStatus;
+    }
+
+    public BuildingListsStatus Json2BuildingListsStatus(String json) {
+        Gson gson = new Gson();
+        BuildingListsStatus buildingListsStatus = gson.fromJson(json,BuildingListsStatus.class);
+        return buildingListsStatus;
+    }
+
+    public RoomListsStatus Json2RoomListsStatus(String json) {
+        Gson gson = new Gson();
+        RoomListsStatus roomListsStatus = gson.fromJson(json,RoomListsStatus.class);
+        return roomListsStatus;
+    }
+
+    public DevicesInRoomStatus Json2DevicesInRoomStatus(String json) {
+        Gson gson = new Gson();
+        DevicesInRoomStatus devicesInRoomStatus = gson.fromJson(json,DevicesInRoomStatus.class);
+        return devicesInRoomStatus;
+    }
+
     public AlarmLists Json2AlarmLists(String json) {
         Gson gson = new Gson();
         AlarmLists alarmLists = gson.fromJson(json,AlarmLists.class);
         return alarmLists;
+    }
+
+    public DamageApplicationStatus Json2DamageApplicationStatus(String json) {
+        Gson gson = new Gson();
+        DamageApplicationStatus damageApplicationStatus = gson.fromJson(json,DamageApplicationStatus.class);
+        return damageApplicationStatus;
+    }
+
+    public DamageApplicationDetailStatus Json2DamageApplicationDetailStatus(String json) {
+        Gson gson = new Gson();
+        DamageApplicationDetailStatus damageApplicationDetailStatus = gson.fromJson(json,DamageApplicationDetailStatus.class);
+        return damageApplicationDetailStatus;
     }
 
     public SchoolProperty Json2SchoolProperty(String json) {
@@ -134,14 +185,14 @@ public class ParseJson {
             JSONObject jsonObject = new JSONObject(json);
             JSONArray shoolListArray = jsonObject.getJSONArray("school_list");
             for (int i = 0; i < shoolListArray.length(); i++) {
-                JSONObject jObject=shoolListArray.getJSONObject(i);
-                String id=jObject.getString("schoolid");
-                String schoolname=jObject.getString("schoolname");
-                Double longitude=jObject.getDouble("longitude");
+                JSONObject jObject = shoolListArray.getJSONObject(i);
+                int id = jObject.getInt("schoolid");
+                String schoolname = jObject.getString("schoolname");
+                Double longitude = jObject.getDouble("longitude");
                 Double latitude = jObject.getDouble("latitude");
-                /*int rate = jObject.getInt("rate");
-                String totaldevice = jObject.getString("totaldevice");
-                String usingdevice = jObject.getString("usingdevice");*/
+//                int rate = jObject.getInt("rate");
+//                String totaldevice = jObject.getString("totaldevice");
+//                String usingdevice = jObject.getString("usingdevice");
                 listSchool.add(new School(id,schoolname,longitude,latitude));
             }
         } catch (Exception e) {
@@ -154,7 +205,7 @@ public class ParseJson {
         List<BuildingLists> listBuilding = new ArrayList<BuildingLists>();
         try {
             JSONObject jsonObject = new JSONObject(json);
-            JSONArray buildingListArray = jsonObject.getJSONArray("buildinglist");
+            JSONArray buildingListArray = jsonObject.getJSONArray("building_list");
             for (int i = 0;i < buildingListArray.length();i++) {
                 JSONObject jObject = buildingListArray.getJSONObject(i);
                 String schoolid = jObject.getString("schoolid");
@@ -168,23 +219,23 @@ public class ParseJson {
         return listBuilding;
     }
 
-    public List<Room> RoomListsPoint(String json) {
-        List<Room> listRoom = new ArrayList<Room>();
-        try {
-            JSONObject jsonObject = new JSONObject(json);
-            JSONArray roomListArray = jsonObject.getJSONArray("room_list");
-            for (int i = 0;i < roomListArray.length();i++) {
-                JSONObject jObject = roomListArray.getJSONObject(i);
-                String roomid = jObject.getString("roomid");
-                String buildingname = jObject.getString("buildingname");
-                String roomname = jObject.getString("roomname");
-                listRoom.add(new Room(buildingname,roomname,roomid));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return listRoom;
-    }
+//    public List<Room> RoomListsPoint(String json) {
+//        List<Room> listRoom = new ArrayList<Room>();
+//        try {
+//            JSONObject jsonObject = new JSONObject(json);
+//            JSONArray roomListArray = jsonObject.getJSONArray("room_list");
+//            for (int i = 0;i < roomListArray.length();i++) {
+//                JSONObject jObject = roomListArray.getJSONObject(i);
+//                String roomid = jObject.getString("roomid");
+//                String buildingname = jObject.getString("buildingname");
+//                String roomname = jObject.getString("roomname");
+//                listRoom.add(new Room(buildingname,roomname,roomid));
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return listRoom;
+//    }
 
     public List<DevicesInRoom> DevicesInRoomPoint(String json) {
         List<DevicesInRoom> listDeviceInRoom = new ArrayList<DevicesInRoom>();
@@ -208,6 +259,28 @@ public class ParseJson {
             e.printStackTrace();
         }
         return listDeviceInRoom;
+    }
+
+    public List<AlarmDevice> AlarmDevicePoint(String json) {
+        try {
+            JSONObject jsonObject = new JSONObject(json);
+            JSONArray alarmlistArray = jsonObject.getJSONArray("alarm_list");
+            for (int i = 0;i < alarmlistArray.length();i++) {
+                JSONObject jObject = alarmlistArray.getJSONObject(i);
+                String schoolid = jObject.getString("schoolid");
+                boolean alarmstart = jObject.getBoolean("alarmstart");
+                int ordernum = jObject.getInt("ordernum");
+                String deviceid = jObject.getString("deviceid");
+                String roomid = jObject.getString("roomid");
+                String alarmtype = jObject.getString("alarmtype");
+                String devicenum = jObject.getString("devicenum");
+                listAlarmDevices.add(new AlarmDevice(schoolid,alarmstart,ordernum,deviceid,roomid,alarmtype,devicenum));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return listAlarmDevices;
     }
 
     public List<DevicesUsageLists> DevicesUsagePoint(String json) {

@@ -9,6 +9,7 @@ public class BuildingLists {
     private String schoolid;
     private String buildingname;
     private String schoolname;
+    private int buildingid;
 
     public BuildingLists(String buildingname, String schoolname) {
         this.buildingname = buildingname;
@@ -25,5 +26,9 @@ public class BuildingLists {
 
     public String getSchoolname() {
         return schoolname;
+    }
+
+    public int getBuildingid() {
+        return buildingid;
     }
 }

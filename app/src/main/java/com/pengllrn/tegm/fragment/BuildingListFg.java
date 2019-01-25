@@ -1,6 +1,7 @@
 package com.pengllrn.tegm.fragment;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -13,16 +14,20 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.pengllrn.tegm.Aoao.AddingUrl;
 import com.pengllrn.tegm.Aoao.BuildingLists;
 import com.pengllrn.tegm.R;
+import com.pengllrn.tegm.activity.LoginActivity;
 import com.pengllrn.tegm.activity.LookDevice;
 import com.pengllrn.tegm.adapter.BuildingListAdapter;
 import com.pengllrn.tegm.bean.BuildingList;
 import com.pengllrn.tegm.constant.Constant;
 import com.pengllrn.tegm.gson.ParseJson;
 import com.pengllrn.tegm.internet.OkHttp;
+import com.pengllrn.tegm.utils.ActivityCollector;
+import com.pengllrn.tegm.utils.SharedHelper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +51,7 @@ public class BuildingListFg extends Fragment {
     private ParseJson mParseJson = new ParseJson();
     private String schoolid;
     private String schoolname;
+    private List<BuildingLists> listBuilding;
 
     private TextView textView1;
     private TextView textView2;
@@ -60,30 +66,46 @@ public class BuildingListFg extends Fragment {
                 case 0x2020:
                     System.out.println("Get Buildinglists");
                     String responseData = (msg.obj).toString();
+                    SharedHelper sharedHelper = new SharedHelper(loolDeviceActivity);
 //                    final List<BuildingList> listBuilding = mParseJson.Json2Gis(responseData).getBuildingLists();
-                    final List<BuildingLists> listBuilding = mParseJson.BuildingPoint(responseData);
-                    if(listBuilding!=null) {
-                        list_gis.setAdapter(new BuildingListAdapter(loolDeviceActivity,
-                                listBuilding, R.layout.base_list_item));
-                        list_gis.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                            @Override
-                            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                                String buildingname = listBuilding.get(position).getBuildingname();
-                                Bundle bundle = new Bundle();
-                                bundle.putString("schoolid",schoolid);
-                                bundle.putString("buildingname",buildingname);
-                                RoomListFg roomListFg = new RoomListFg();
-                                roomListFg.setArguments(bundle);
-                                FragmentManager fragmentManager = loolDeviceActivity.getSupportFragmentManager();
-                                FragmentTransaction transaction = fragmentManager.beginTransaction();
-                                transaction.replace(R.id.fragment_list, roomListFg);
-                                transaction.addToBackStack(null);
-                                transaction.commit();
-                            }
-                        });
+                    int statusValue = mParseJson.Json2BuildingListsStatus(responseData).getStatus();
+                    if (statusValue == -5) {
+                        Toast.makeText(loolDeviceActivity,"已与服务器断开连接，请重新登录",Toast.LENGTH_SHORT).show();
+                        ActivityCollector.finishAll();
+                        sharedHelper.clear();
+                        Intent intent = new Intent(loolDeviceActivity, LoginActivity.class);
+                        startActivity(intent);
+                    } else if (statusValue == 0) {
+                        listBuilding = mParseJson.Json2BuildingListsStatus(responseData).getBuilding_list();
+                        if(listBuilding!=null) {
+                            list_gis.setAdapter(new BuildingListAdapter(loolDeviceActivity,
+                                    listBuilding, R.layout.base_list_item));
+                            list_gis.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                @Override
+                                public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                                    int buildingid = listBuilding.get(position).getBuildingid();
+                                    Bundle bundle = new Bundle();
+                                    bundle.putInt("buildingid",buildingid);
+                                    RoomListFg roomListFg = new RoomListFg();
+                                    roomListFg.setArguments(bundle);
+                                    FragmentManager fragmentManager = loolDeviceActivity.getSupportFragmentManager();
+                                    FragmentTransaction transaction = fragmentManager.beginTransaction();
+                                    transaction.replace(R.id.fragment_list, roomListFg);
+                                    transaction.addToBackStack(null);
+                                    transaction.commit();
+                                }
+                            });
+                        }
                     }
                     break;
+                case 0x22:
+                    Toast.makeText(loolDeviceActivity, "服务器响应超时", Toast.LENGTH_SHORT).show();
+                    break;
+                case 0x30:
+                    Toast.makeText(loolDeviceActivity, "网络连接失败", Toast.LENGTH_SHORT).show();
+                    break;
                 default:
+                    break;
             }
             super.handleMessage(msg);
         }

@@ -1,5 +1,6 @@
 package com.pengllrn.tegm.activity;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.Message;
@@ -15,6 +16,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.pengllrn.tegm.Aoao.AddingUrl;
 import com.pengllrn.tegm.Aoao.DeviceProperty;
@@ -25,7 +27,9 @@ import com.pengllrn.tegm.bean.Statistics;
 import com.pengllrn.tegm.constant.Constant;
 import com.pengllrn.tegm.gson.ParseJson;
 import com.pengllrn.tegm.internet.OkHttp;
+import com.pengllrn.tegm.utils.ActivityCollector;
 import com.pengllrn.tegm.utils.FileCache;
+import com.pengllrn.tegm.utils.SharedHelper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,6 +62,8 @@ public class StatisticsAct extends AppCompatActivity {
     private List<String> listSchool = new ArrayList<>();
     private List<String> listStatistics = new ArrayList<>();
     private List<School> list_School = new ArrayList<>();
+    private SharedHelper sharedHelper = new SharedHelper(this);
+
 
 
     private Handler mHandler = new Handler() {
@@ -68,11 +74,32 @@ public class StatisticsAct extends AppCompatActivity {
                 case 0x2020:
                     String responseData = (msg.obj).toString();
                     System.out.println(responseData);
-                    List<DeviceProperty> statisticses = mParseJson.Json2SchoolProperty(responseData).getProperty_info();
-                    setChartView(statisticses);
-                    tv_info.setText("统计信息如下：");
+                    List<DeviceProperty> statisticses = new ArrayList<DeviceProperty>();
+                    int statusValue = mParseJson.Json2SchoolProperty(responseData).getStatus();
+                    if (statusValue == -5) {
+                        Toast.makeText(getApplicationContext(),"已与服务器断开连接，请重新登录",Toast.LENGTH_SHORT).show();
+                        ActivityCollector.finishAll();
+                        sharedHelper.clear();
+                        Intent intent = new Intent(StatisticsAct.this, LoginActivity.class);
+                        startActivity(intent);
+                    } else if (statusValue == -1) {
+                        Toast.makeText(getApplicationContext(),"该学校还未报备设备财产统计",Toast.LENGTH_SHORT).show();
+                        statisticses.clear();
+                        setChartView(statisticses);
+                    } else if (statusValue == 0) {
+                        statisticses = mParseJson.Json2SchoolProperty(responseData).getProperty_info();
+                        setChartView(statisticses);
+                        tv_info.setText("统计信息如下：");
+                    }
+                    break;
+                case 0x22:
+                    Toast.makeText(getApplicationContext(), "服务器响应超时", Toast.LENGTH_SHORT).show();
+                    break;
+                case 0x30:
+                    Toast.makeText(getApplicationContext(), "网络连接失败", Toast.LENGTH_SHORT).show();
                     break;
                 default:
+                    break;
             }
             super.handleMessage(msg);
         }
@@ -208,7 +235,7 @@ public class StatisticsAct extends AppCompatActivity {
     private void getData(String school, String statistics) {
         tv_info.setText("正在查询...");
         String type = "";
-        String schoolid = "";
+        int schoolid = 0;
         switch (statistics) {
             case "采购统计":
                 type = "1";
@@ -238,7 +265,7 @@ public class StatisticsAct extends AppCompatActivity {
             OkHttp okHttp = new OkHttp(getApplicationContext(), mHandler);
             String getschoolpropertyurl;
             HashMap<String,String> hashMap;
-            hashMap = AddingUrl.createHashMap1("schoolid",schoolid);
+            hashMap = AddingUrl.createHashMap1("schoolid",String.valueOf(schoolid));
             getschoolpropertyurl = AddingUrl.getUrl(applyUrl,hashMap);
             okHttp.getDataFromInternet(getschoolpropertyurl);
 //            RequestBody requestBody = new FormBody.Builder().add("school", schoolid).add("type", type).build();
@@ -286,4 +313,5 @@ public class StatisticsAct extends AppCompatActivity {
         columnchart.setColumnChartData(columnChartData);
 
     }
+
 }

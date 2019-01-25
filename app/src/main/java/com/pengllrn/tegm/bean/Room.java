@@ -9,11 +9,12 @@ package com.pengllrn.tegm.bean;
  */
 
 public class Room {
-    private String buildingname = "";
-    private String roomname = "";
-    private String roomid;
+    private String buildingname;
+    private String roomname;
+    private String buildingid;
+    private int roomid;
 
-    public Room(String buildingname, String roomname,String roomid) {
+    public Room(String buildingname, String roomname,int roomid) {
         this.buildingname = buildingname;
         this.roomname = roomname;
         this.roomid = roomid;
@@ -27,7 +28,11 @@ public class Room {
         return roomname;
     }
 
-    public String getRoomid() {
+    public int getRoomid() {
         return roomid;
+    }
+
+    public String getBuildingid() {
+        return buildingid;
     }
 }

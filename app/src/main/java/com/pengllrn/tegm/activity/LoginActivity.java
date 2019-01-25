@@ -66,7 +66,15 @@ public class LoginActivity extends AppCompatActivity {
                     } else {
                         Toast.makeText(getApplicationContext(), "账号或密码错误", Toast.LENGTH_SHORT).show();
                     }
+                    break;
+                case 0x22:
+                    Toast.makeText(getApplicationContext(), "服务器响应超时", Toast.LENGTH_SHORT).show();
+                    break;
+                case 0x30:
+                    Toast.makeText(getApplicationContext(), "网络连接失败", Toast.LENGTH_SHORT).show();
+                    break;
                 default:
+                    break;
             }
             super.handleMessage(msg);
         }
@@ -150,6 +158,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ActivityCollector.removeActivity(this);
+        ActivityCollector.finishAll();
     }
 }

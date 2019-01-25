@@ -1,6 +1,7 @@
 package com.pengllrn.tegm.Aoao;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -11,13 +12,17 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.pengllrn.tegm.R;
 import com.pengllrn.tegm.activity.DeviceInRoom;
+import com.pengllrn.tegm.activity.LoginActivity;
 import com.pengllrn.tegm.activity.LookDevice;
 import com.pengllrn.tegm.constant.Constant;
 import com.pengllrn.tegm.gson.ParseJson;
 import com.pengllrn.tegm.internet.OkHttp;
+import com.pengllrn.tegm.utils.ActivityCollector;
+import com.pengllrn.tegm.utils.SharedHelper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +37,8 @@ public class DeviceInRoomFg extends Fragment {
     private ParseJson mParseJson = new ParseJson();
     private LookDevice lookDevice;
     private ListView list_gis;
-    private String roomid;
+    private int roomid;
+    private List<DevicesInRoom> listDeviceInRoom;
 
     private TextView textView1;
     private TextView textView2;
@@ -47,18 +53,35 @@ public class DeviceInRoomFg extends Fragment {
                 case 0x2020:
                     System.out.println("Get deviceusagelists");
                     String responseData = (msg.obj).toString();
-                    final List<DevicesInRoom> listDeviceInRoom = mParseJson.DevicesInRoomPoint(responseData);
-                    if (listDeviceInRoom != null) {
-                        list_gis.setAdapter(new DevicesInRoomAdapter(lookDevice, listDeviceInRoom, R.layout.base_list_item));
-                        list_gis.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                            @Override
-                            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                    SharedHelper sharedHelper = new SharedHelper(lookDevice);
+                    int statusValue = mParseJson.Json2DevicesInRoomStatus(responseData).getStatus();
+                    if (statusValue == -5) {
+                        Toast.makeText(lookDevice,"已与服务器断开连接，请重新登录",Toast.LENGTH_SHORT).show();
+                        ActivityCollector.finishAll();
+                        sharedHelper.clear();
+                        Intent intent = new Intent(lookDevice, LoginActivity.class);
+                        startActivity(intent);
+                    } else if (statusValue == 0) {
+                        listDeviceInRoom = mParseJson.Json2DevicesInRoomStatus(responseData).getDevice_list();
+                        if (listDeviceInRoom != null) {
+                            list_gis.setAdapter(new DevicesInRoomAdapter(lookDevice, listDeviceInRoom, R.layout.base_list_item));
+                            list_gis.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                                @Override
+                                public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
 
-                            }
-                        });
+                                }
+                            });
+                        }
                     }
                     break;
+                case 0x22:
+                    Toast.makeText(lookDevice, "服务器响应超时", Toast.LENGTH_SHORT).show();
+                    break;
+                case 0x30:
+                    Toast.makeText(lookDevice, "网络连接失败", Toast.LENGTH_SHORT).show();
+                    break;
                 default:
+                    break;
             }
             super.handleMessage(msg);
         }
@@ -95,9 +118,9 @@ public class DeviceInRoomFg extends Fragment {
         String getdevicesinroomUrl;
         HashMap<String,String> hashMap;
         list_gis = (ListView) view.findViewById(R.id.list_gis);
-        roomid = getArguments().getString("roomid");
+        roomid = getArguments().getInt("roomid");
         OkHttp okHttp = new OkHttp(lookDevice, mHandler);
-        hashMap = AddingUrl.createHashMap1("roomid",roomid);
+        hashMap = AddingUrl.createHashMap1("roomid",String.valueOf(roomid));
         getdevicesinroomUrl = AddingUrl.getUrl(applyUrl,hashMap);
         okHttp.getDataFromInternet(getdevicesinroomUrl);
     }

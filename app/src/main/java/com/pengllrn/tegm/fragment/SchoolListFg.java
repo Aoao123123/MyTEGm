@@ -1,6 +1,7 @@
 package com.pengllrn.tegm.fragment;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,17 +14,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.pengllrn.tegm.Aoao.AddingUrl;
 import com.pengllrn.tegm.Aoao.DevicesUsageLists;
 import com.pengllrn.tegm.Aoao.DevicesUsageListsAdapter;
 import com.pengllrn.tegm.R;
+import com.pengllrn.tegm.activity.LoginActivity;
 import com.pengllrn.tegm.activity.LookDevice;
+import com.pengllrn.tegm.activity.MainActivity;
 import com.pengllrn.tegm.adapter.SchoolListAdapter;
 import com.pengllrn.tegm.bean.School;
 import com.pengllrn.tegm.constant.Constant;
 import com.pengllrn.tegm.gson.ParseJson;
 import com.pengllrn.tegm.internet.OkHttp;
+import com.pengllrn.tegm.utils.ActivityCollector;
+import com.pengllrn.tegm.utils.SharedHelper;
 
 import org.json.JSONObject;
 
@@ -57,9 +64,10 @@ public class SchoolListFg extends Fragment {
     private boolean flag = false;
     private List<DevicesUsageLists> listDevicesUsage = new ArrayList<DevicesUsageLists>();
 
-//    public final int GETOK = 0x2020;
-//    public final int WRANG = 0x22;
-//    public final int EXCEPTION = 0x30;
+    private TextView textView1;
+    private TextView textView2;
+    private TextView textView3;
+    private TextView textView4;
 
     Handler mHandler = new Handler() {
         @Override
@@ -67,24 +75,31 @@ public class SchoolListFg extends Fragment {
             // TODO Auto-generated method stub
             switch (msg.what) {
                 case 0x2020:
-//                    if (flag) {
-//                        listDevicesUsage.clear();
-//                        flag = !flag;
-//                    }
-//                    List<School> listSchool = mParseJson.Json2Gis(responseData).getSchoolLists();
-//                    if(listSchool!=null) {
-//                        list_gis.setAdapter(new SchoolListAdapter(lookDeviceActivity,
-//                                listSchool, R.layout.base_list_item));
-//                        setListListener(listSchool);
-//                    }
+                    SharedHelper sharedHelper = new SharedHelper(lookDeviceActivity);
                     String responseData = (msg.obj).toString();
-                    listDevicesUsage = mParseJson.DevicesUsagePoint(responseData);
-                    if (listDevicesUsage != null) {
-                        list_gis.setAdapter(new DevicesUsageListsAdapter(lookDeviceActivity,listDevicesUsage,R.layout.base_list_item));
-                        setListListener(listDevicesUsage);
+                    int statusValue = mParseJson.Json2DeviceUsageStatus(responseData).getStatus();
+                    if (statusValue == -5) {
+                        Toast.makeText(lookDeviceActivity,"已与服务器断开连接，请重新登录",Toast.LENGTH_SHORT).show();
+                        ActivityCollector.finishAll();
+                        sharedHelper.clear();
+                        Intent intent = new Intent(lookDeviceActivity, LoginActivity.class);
+                        startActivity(intent);
+                    } else if (statusValue == 0) {
+                        listDevicesUsage = mParseJson.DevicesUsagePoint(responseData);
+                        if (listDevicesUsage != null) {
+                            list_gis.setAdapter(new DevicesUsageListsAdapter(lookDeviceActivity,listDevicesUsage,R.layout.base_list_item));
+                            setListListener(listDevicesUsage);
+                        }
                     }
                     break;
+                case 0x22:
+                    Toast.makeText(lookDeviceActivity, "服务器响应超时", Toast.LENGTH_SHORT).show();
+                    break;
+                case 0x30:
+                    Toast.makeText(lookDeviceActivity, "网络连接失败", Toast.LENGTH_SHORT).show();
+                    break;
                 default:
+                    break;
             }
             super.handleMessage(msg);
         }
@@ -111,6 +126,7 @@ public class SchoolListFg extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        setTitle();
         list_gis = (ListView) view.findViewById(R.id.list_gis);
         String data = lookDeviceActivity.read("schoolList");
         if (data != null && !data.equals("")) {
@@ -130,8 +146,8 @@ public class SchoolListFg extends Fragment {
            listDevicesUsage.clear();
            if (listSchool != null) {
                for (int i = 0;i < listSchool.size();i++) {
-                   String schoolid = listSchool.get(i).getId();
-                   hashMap = AddingUrl.createHashMap1("schoolid",schoolid);
+                   int schoolid = listSchool.get(i).getId();
+                   hashMap = AddingUrl.createHashMap1("schoolid",String.valueOf(schoolid));
                    devicesusageUrl = AddingUrl.getUrl(applyUrl,hashMap);
                    OkHttp okHttp = new OkHttp(lookDeviceActivity,mHandler);
                    okHttp.getDataFromInternet(devicesusageUrl);
@@ -158,11 +174,11 @@ public class SchoolListFg extends Fragment {
 //            }
 //        });
 //    }
-    public void setListListener(final List<DevicesUsageLists> listDevicesUsage) {
+    public void setListListener(final List<DevicesUsageLists> l) {
         list_gis.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView,View view,int position,long id) {
-                String schoolid = listDevicesUsage.get(position).getSchoolid();
+                String schoolid = l.get(position).getSchoolid();
                 Bundle bundle = new Bundle();
                 bundle.putString("schoolid",schoolid);
                 BuildingListFg buildingListFg = new BuildingListFg();
@@ -175,72 +191,14 @@ public class SchoolListFg extends Fragment {
             }
         });
     }
-
-//    public void getDataFromInternet(final String path) {
-//        new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                try {
-//                    OkHttpClient client = new OkHttpClient();
-//                    SharedPreferences pref = lookDeviceActivity.getSharedPreferences("mycookie",Context.MODE_PRIVATE);
-//                    String sessionid = pref.getString("sessionid","");
-//                    //用post提交键值对格式的数据
-//                    Request request = new Request.Builder()
-//                            .addHeader("cookie",sessionid)
-//                            .url(path)
-//                            .build();
-//                    Response response = client.newCall(request).execute();
-//                    String responseData = response.body().string();
-//                    listDevicesUsage = mParseJson.DevicesUsagePoint(responseData);
-//                    System.out.println(listDevicesUsage.size());
-//                    System.out.println(listSchool.size());
-//                    if (response.isSuccessful() && listDevicesUsage.size() == listSchool.size()) {
-//                        Message msg = new Message();
-//                        msg.what = GETOK;
-//                        msg.obj = responseData;
-//                        mHandler.sendMessage(msg);
-//                        System.out.println("Connected");
-//                    } else {
-//                        //TODO 错误报告
-//                        Message msg = new Message();
-//                        msg.what = WRANG;
-//                        mHandler.sendMessage(msg);
-//                        System.out.println("Not response");
-//                    }
-//                } catch (IOException e) {
-//                    Message msg = new Message();
-//                    msg.what = EXCEPTION;
-//                    mHandler.sendMessage(msg);
-//                    e.printStackTrace();
-//                    System.out.println("Error");
-//                }
-//            }
-//        }).start();
-//    }
-
-//    public List<DevicesUsageLists> DevicesUsagePoint(String json) {
-//        try {
-//            JSONObject jsonObject = new JSONObject(json);
-//            JSONObject devicesUsageObject = jsonObject.getJSONObject("device_usage");
-//
-//            String schoolid = devicesUsageObject.getString("schoolid");
-//            String schoolname = devicesUsageObject.getString("schoolname");
-//            int total_device = devicesUsageObject.getInt("total_device");
-//            int using_device = devicesUsageObject.getInt("using_device");
-//            int rate;
-//            if (total_device != 0) {
-//                double Rate = new BigDecimal((float)using_device/total_device).setScale(2, BigDecimal.ROUND_HALF_UP).doubleValue();
-//                rate = (int) (Rate * 100);
-//                System.out.println("Rate is: " + Rate);
-//                System.out.println("usingdevice is " + using_device);
-//                System.out.println("totaldevice is " + total_device);
-//            } else {
-//                rate = 0;
-//            }
-//            listDevicesUsage.add(new DevicesUsageLists(schoolid,schoolname,total_device,using_device,rate));
-//        }catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return listDevicesUsage;
-//    }
+    public void setTitle() {
+        textView1 = (TextView) lookDeviceActivity.findViewById(R.id.text1);
+        textView2 = (TextView) lookDeviceActivity.findViewById(R.id.text2);
+        textView3 = (TextView) lookDeviceActivity.findViewById(R.id.text3);
+        textView4 = (TextView) lookDeviceActivity.findViewById(R.id.text4);
+        textView1.setText("名称");
+        textView2.setText("设备总数");
+        textView3.setText("正在使用");
+        textView4.setText("使用率");
+    }
 }

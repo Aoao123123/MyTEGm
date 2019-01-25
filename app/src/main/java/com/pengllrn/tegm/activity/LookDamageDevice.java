@@ -31,6 +31,8 @@ import com.pengllrn.tegm.constant.Constant;
 import com.pengllrn.tegm.gson.ParseJson;
 import com.pengllrn.tegm.internet.OkHttp;
 import com.pengllrn.tegm.listener.RecyclerItemClickListener;
+import com.pengllrn.tegm.utils.ActivityCollector;
+import com.pengllrn.tegm.utils.SharedHelper;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -51,6 +53,7 @@ public class LookDamageDevice extends AppCompatActivity {
     private ParseJson mParseJson = new ParseJson();
     private PhotoAdapter photoAdapter;
     private ArrayList<String> Photos = new ArrayList<>();
+    private SharedHelper sharedHelper = new SharedHelper(this);
 
     private TextView device_type;
     private TextView device_num;
@@ -76,14 +79,17 @@ public class LookDamageDevice extends AppCompatActivity {
             switch (msg.what) {
                 case 0x2020:
                     String responseData = (msg.obj).toString();
-                    listDamageApplicationDetail = mParseJson.DamageApplicationDetailPoint(responseData);
-                    damageApplicationDetailLists = listDamageApplicationDetail.get(0);
-//                     damageDevice = mParseJson.Json2DamageDevice(responseData);
-                    setViews(damageApplicationDetailLists);
-                    break;
-                case 0x22:
-                    Toast.makeText(getApplicationContext(), "数据更新失败！", Toast.LENGTH_SHORT).show();
-                    //line_chart.drawBrokenLine(date, score);
+                    int statusValue = mParseJson.Json2DamageApplicationDetailStatus(responseData).getStatus();
+                    if (statusValue == -5) {
+                        Toast.makeText(getApplicationContext(),"已与服务器断开连接，请重新登录",Toast.LENGTH_SHORT).show();
+                        ActivityCollector.finishAll();
+                        sharedHelper.clear();
+                        Intent intent = new Intent(LookDamageDevice.this, LoginActivity.class);
+                        startActivity(intent);
+                    } else if (statusValue == 0) {
+                        damageApplicationDetailLists = mParseJson.Json2DamageApplicationDetailStatus(responseData).getApplication_detail();
+                        setViews(damageApplicationDetailLists);
+                    }
                     break;
                 case 0x2030:
                     try {
@@ -121,8 +127,14 @@ public class LookDamageDevice extends AppCompatActivity {
                     if(status == 0) {
                         finish();
                         Toast.makeText(getApplicationContext(), "设备报废成功！", Toast.LENGTH_SHORT).show();
-                    }else {
-                        Toast.makeText(getApplicationContext(), "设备报废失败！", Toast.LENGTH_SHORT).show();
+                    } else if (status == -5) {
+                        Toast.makeText(getApplicationContext(), "账号或密码错误", Toast.LENGTH_SHORT).show();
+                        ActivityCollector.finishAll();
+                        sharedHelper.clear();
+                        Intent intent = new Intent(LookDamageDevice.this, LoginActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(getApplicationContext(),"设备报废失败！",Toast.LENGTH_SHORT).show();
                     }
                     break;
                 case 0x40:
@@ -133,9 +145,23 @@ public class LookDamageDevice extends AppCompatActivity {
                     if(status1 == 0) {
                         finish();
                         Toast.makeText(getApplicationContext(), "设备拒绝报废成功！", Toast.LENGTH_SHORT).show();
-                    }else {
+                    } else if(status1 == -5) {
+                        Toast.makeText(getApplicationContext(), "账号或密码错误", Toast.LENGTH_SHORT).show();
+                        ActivityCollector.finishAll();
+                        sharedHelper.clear();
+                        Intent intent = new Intent(LookDamageDevice.this, LoginActivity.class);
+                        startActivity(intent);
+                    } else {
                         Toast.makeText(getApplicationContext(), "设备拒绝报废失败！", Toast.LENGTH_SHORT).show();
                     }
+                    break;
+                case 0x22:
+                    Toast.makeText(getApplicationContext(), "服务器响应超时", Toast.LENGTH_SHORT).show();
+                    break;
+                case 0x30:
+                    Toast.makeText(getApplicationContext(), "网络连接失败", Toast.LENGTH_SHORT).show();
+                    break;
+                default:
                     break;
             }
             super.handleMessage(msg);
@@ -146,6 +172,7 @@ public class LookDamageDevice extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_look_damage_device);
+        ActivityCollector.addActivity(this);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar1);
         setSupportActionBar(toolbar);

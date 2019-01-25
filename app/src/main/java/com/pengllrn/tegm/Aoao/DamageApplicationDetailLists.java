@@ -42,10 +42,6 @@ public class DamageApplicationDetailLists {
 
     }
 
-    public DamageApplicationDetailLists() {
-
-    }
-
     public String getAppliertel() {
         return appliertel;
     }

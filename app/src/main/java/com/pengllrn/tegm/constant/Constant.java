@@ -9,7 +9,7 @@ public class Constant {
     /**
      * 系统所使用到的URL
      **/
-    public static final String SERVER_URL = "http://47.107.37.50:8000/";//服务器所在站点以及端口号
+    public static final String SERVER_URL = "http://47.106.146.145/";//服务器所在站点以及端口号
     /**
      * 用户登录活动网址
      **/
@@ -34,7 +34,7 @@ public class Constant {
    /**
    * 獲取學校中的教室
    */
-    public static final String URL_ROOM = SERVER_URL + "get_rooms_list/";
+    public static final String URL_ROOM = SERVER_URL + "get_rooms_in_building/";
    /**
    * 獲取教室中設備
    */

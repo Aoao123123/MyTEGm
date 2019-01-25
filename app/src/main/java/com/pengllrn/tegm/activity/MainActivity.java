@@ -83,34 +83,58 @@ public class MainActivity extends AppCompatActivity {
                 case 0x2020:
                     String responseData = (msg.obj).toString();
                     parseJson = new ParseJson();
-                    listSchool = parseJson.SchoolPoint(responseData);
-                    School school;
-                    for (int i = 0; i < listSchool.size(); i++) {
-                        school = listSchool.get(i);
-                        avg_latitude += school.getLatitude();
-                        avg_longitude += school.getLongitude();
-                        drawmarker(school.getId(), new LatLng(school.getLatitude(), school.getLongitude()), 50);
-                        System.out.println(school.getId());
-                        System.out.println(school.getLatitude());
-                        System.out.println(school.getLongitude());
-                        System.out.println(school.getSchoolname());
-                    }
-                    if (listSchool.size() > 0) {
-                        save(responseData, "schoolList");
-                    }
+//                    int statusValue = parseJson.Json2SchoolStatus(responseData).getStatus();
+//                    if (statusValue != 0) {
+//                        sharedHelper.clear();
+//                        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+//                        startActivity(intent);
+//                    }
+                    int statusValue = parseJson.Json2SchoolStatus(responseData).getStatus();
+                    if (statusValue == -5) {
+                        Toast.makeText(getApplicationContext(),"已与服务器断开连接，请重新登录",Toast.LENGTH_SHORT).show();
+                        ActivityCollector.finishAll();
+                        sharedHelper.clear();
+                        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                        startActivity(intent);
+                    } else if (statusValue == 0) {
+                        listSchool = parseJson.SchoolPoint(responseData);
+                        School school;
+                        for (int i = 0; i < listSchool.size(); i++) {
+                            school = listSchool.get(i);
+                            avg_latitude += school.getLatitude();
+                            avg_longitude += school.getLongitude();
+                            drawmarker(String.valueOf(school.getId()), new LatLng(school.getLongitude(), school.getLatitude()), 50);
+                            System.out.println(school.getId());
+                            System.out.println(school.getLatitude());
+                            System.out.println(school.getLongitude());
+                            System.out.println(school.getSchoolname());
+                        }
+                        if (listSchool.size() > 0) {
+                            save(responseData, "schoolList");
+                        }
 
-                    avg_latitude = avg_latitude / listSchool.size();
-                    avg_longitude = avg_longitude / listSchool.size();
-                    LatLng latLng = new LatLng(avg_latitude, avg_longitude);
-                    MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(latLng);
-                    baiduMap.setMapStatus(update);
-                    update = MapStatusUpdateFactory.zoomTo(13f);
-                    baiduMap.setMapStatus(update);
-                    isFirstLocate = false;
-                    isFirstSearch = false;
-                    //LatLng(v,v1),第一个参数是纬度值，第二个参数是经度值
+                        avg_latitude = avg_latitude / listSchool.size();
+                        avg_longitude = avg_longitude / listSchool.size();
+                        System.out.println(avg_latitude);
+                        System.out.println(avg_longitude);
+                        LatLng latLng = new LatLng(avg_longitude, avg_latitude);
+                        MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(latLng);
+                        baiduMap.setMapStatus(update);
+                        update = MapStatusUpdateFactory.zoomTo(13f);
+                        baiduMap.setMapStatus(update);
+                        isFirstLocate = false;
+                        isFirstSearch = false;
+                        //LatLng(v,v1),第一个参数是纬度值，第二个参数是经度值
+                    }
+                    break;
+                case 0x22:
+                    Toast.makeText(getApplicationContext(),"服务器响应超时",Toast.LENGTH_SHORT).show();
+                    break;
+                case 0x30:
+                    Toast.makeText(getApplicationContext(),"网络连接故障",Toast.LENGTH_SHORT).show();
                     break;
                 default:
+                    break;
             }
             super.handleMessage(msg);
         }
@@ -136,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
         school = sharedHelper.readbykey("school");
         userid = sharedHelper.readbykey("userid");
         isOfficial = sharedHelper.readOfficial();
+        ActivityCollector.addActivity(this);
     }
 
     @Override
@@ -190,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
 
+            //用户注销
             lv_exit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {

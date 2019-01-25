@@ -14,6 +14,7 @@ import android.view.View;
 import com.pengllrn.tegm.R;
 import com.pengllrn.tegm.fragment.BuildingListFg;
 import com.pengllrn.tegm.fragment.SchoolListFg;
+import com.pengllrn.tegm.utils.ActivityCollector;
 import com.pengllrn.tegm.utils.FileCache;
 
 public class LookDevice extends AppCompatActivity {
@@ -23,6 +24,7 @@ public class LookDevice extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lool_device);
+        ActivityCollector.addActivity(this);
         //A
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar1);
         setSupportActionBar(toolbar);
@@ -43,7 +45,7 @@ public class LookDevice extends AppCompatActivity {
             buildingListFg.setArguments(bundle);
             FragmentManager fragmentManager = getSupportFragmentManager();
             FragmentTransaction transaction = fragmentManager.beginTransaction();
-            transaction.add(R.id.fragment_list, buildingListFg);
+            transaction.replace(R.id.fragment_list, buildingListFg);
             transaction.commit();
         }else {
             FragmentManager fragmentManager = getSupportFragmentManager();

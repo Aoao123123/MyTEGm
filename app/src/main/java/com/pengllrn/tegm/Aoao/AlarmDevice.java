@@ -14,6 +14,16 @@ public class AlarmDevice {
     private String alarmtype;
     private String devicenum;
 
+    public AlarmDevice(String schoolid,boolean alarmstart,int ordernum,String deviceid,String roomid,String alarmtype,String devicenum) {
+        this.schoolid = schoolid;
+        this.alarmstart = alarmstart;
+        this.ordernum = ordernum;
+        this.deviceid = deviceid;
+        this.roomid = roomid;
+        this. alarmtype = alarmtype;
+        this.devicenum = devicenum;
+    }
+
     public String getSchoolid() {
         return schoolid;
     }

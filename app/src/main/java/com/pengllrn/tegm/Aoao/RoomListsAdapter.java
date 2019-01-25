@@ -23,7 +23,7 @@ public class RoomListsAdapter extends ListViewAdapter<Room> {
     public void convert(ViewHolder holder, Room room) {
         holder.setText(R.id.item1,room.getBuildingname());
         holder.setText(R.id.item2,room.getRoomname());
-        holder.setText(R.id.item3,room.getRoomid());
+        holder.setText(R.id.item3,String.valueOf(room.getRoomid()));
         holder.setText(R.id.item4,"--");
     }
 }
